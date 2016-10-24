@@ -38,42 +38,161 @@ def loadData(fileName):
 
     Returns
     -------
-    trials_ind: list
-        List that contains the indeces for every trial start.
+    data: pandas data frame
+        Data frame that contains the raw data.
 
-    trials_list: list
-        List that contains the data frames with individual trial data.
+    trialNum: pandas data frame
+        Data frame that contains the valid trial numbers.
+
+    Trials_list: dict
+        Dict that contains sorted trial data.
     """
 
     # load the data from csv
-    data = pd.read_csv(fileName, delimiter= ",", names= ['Event', 'Value_1', 'Value_2'], skiprows= 2, skip_blank_lines= True, error_bad_lines= False)
+    data = pd.read_csv(fileName, delimiter= ",", names= ['Event', 'Value_1', 'Value_2'], skip_blank_lines= True, error_bad_lines= False)
 
-    # first get the list of valid trials and the number of trials
-    trialNum_list = data.loc[data.Event == 'Trial#']['Value_1']
-    trialNum = len(trialNum_list)
+    # groupd the data
+    grouped = data.groupby('Event')
 
-    # get the indeces for each trial
-    trials_ind = np.array([])
-    for i in  trialNum_list:
-        iti = data.loc[(data.loc[data.Event == 'Trial#']).loc[data.Value_1 == i].index[0]+1]['Value_1']
-        temp = (data.loc[data.Event == 'Trial#']).loc[data.Value_1 == i].index[0]
-        (data.loc[data.Event == 'Trial#']).loc[data.Value_1 == i].index[0]
-        trials_ind = np.append(trials_ind, temp)
+    trialNum = grouped.get_group('Trial#')
+    trialNew = grouped.get_group('Trial_New')
+    trialEnd = grouped.get_group('Trial_End').iloc[1:]
+    trialEnd = trialEnd.append(data.tail(1))
 
-    trials_list = []
-    for i in range(0, len(trials_ind)):
-        if i < trialNum-1:
-            temp = (data.loc[trials_ind[i]:trials_ind[i+1]-1])
-        else:
-            temp = (data.loc[trials_ind[i]:len(data)-1])
-        trials_list.append(temp)
+    Trials_list = {}
+    for ind, each in enumerate(trialNum['Value_1']):
+        ind_head = trialNum.iloc[ind].name
+        ind_tail = trialEnd.iloc[ind].name
+        #Trials_list.append(data.iloc[ind_head : ind_tail].sort())
+        Trials_list[int(each)] = data.iloc[ind_head : ind_tail].sort_values(by= 'Value_2')
 
-    return trials_list, trials_ind, trialNum_list, trialNum
+    return data, trialNum, Trials_list
+
+def getLicks(trialNum, Trials_list, th= 0):
+    """
+    Parameters
+    ----------
+    trialNum: pandas data frame
+        Data frame that contains the valid trial numbers.
+
+    Trials_list: dict
+        Dict that contains sorted trial data.
+
+    th: int
+        Threshold value for digitizing tha lick values. Default is 0.
+
+    Returns
+    -------
+    Licks: pandas data frame
+        Data frame that contains the timestamps, raw and digitized lick values.
+        Columns: LickTime, LickDigi, LickRaw
+    """
+
+    Licks = {}
+    for ind, each in enumerate(trialNum['Value_1']):
+        lick_times = np.array(Trials_list[int(each)][Trials_list[int(each)]['Event'] == 'Lick']['Value_2'])
+        lick_values = np.array(Trials_list[int(each)][Trials_list[int(each)]['Event'] == 'Lick']['Value_1'])
+        Licks[int(each)] = pd.DataFrame({'LickTime' : lick_times, 'LickRaw' : lick_values, 'LickDigi' : np.digitize(lick_values, bins= [th])})
+
+    return Licks
+
+def findLicks(trialNum, Licks):
+    """
+    Parameters
+    ----------
+    trialNum: pandas data frame
+        Data frame that contains the valid trial numbers.
+
+    Licks: pandas data frame
+        lorem ipsum.
+
+    Returns
+    -------
+    Licks: pandas data frame
+        lorem ipsum.
+        Columns: lorem ipsum
+    """
+
+    for ind, each in enumerate(trialNum['Value_1']):
+        temp = np.array(Licks[int(each)]['LickDigi'].iloc[1:-1]) - np.array(Licks[int(each)]['LickDigi'].iloc[0:-2])
+        temp = np.append(np.append(0, temp), 0)
+        Licks[int(each)]['Stamps'] = temp
+        #Licks[int(each)]['Stamps'] = Licks[int(each)]['LickTime'][Licks[int(each)]['LickDigi'] == 1]
+
+    return Licks
+
+def getPokes(trialNum, Trials_list):
+    """
+    Parameters
+    ----------
+    trialNum: pandas data frame
+        Data frame that contains the valid trial numbers.
+
+    Trials_list: dict
+        Dict that contains sorted trial data.
+
+    Returns
+    -------
+    Licks: pandas data frame
+        Data frame that contains the timestamps of start and end for each poke.
+        Columns: PokeStart, PokeEnd
+    """
+
+    Pokes = {}
+    for ind, each in enumerate(trialNum['Value_1']):
+        poke_start = pd.DataFrame({'PokeStart' : np.array(Trials_list[int(each)][Trials_list[int(each)]['Event'] == 'Poke_Start']['Value_1'])})
+        poke_end = pd.DataFrame({'PokeEnd' : np.array(Trials_list[int(each)][Trials_list[int(each)]['Event'] == 'Poke_End']['Value_1'])})
+        Pokes[int(each)] = pd.concat([poke_start, poke_end], axis= 1)
+
+    return Pokes
+
+def plotLicks(trialNum, Licks):
+    """
+    """
+
+    Licks
+    for ind, each in enumerate(trialNum['Value_1']):
+        lick_start = Licks[10]['LickTime'][Licks[10]['Stamps'] == 1]
+        lick_end = Licks[10]['LickTime'][Licks[10]['Stamps'] == -1]
+
+        #fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 3), facecolor='w', dpi= 150)
+        for lick_ind in Licks[int(each)].index:
+            pass
+            #if Licks[int(each)]['']
+
 
 if __name__ == "__main__":
     #filenames = chooseFile()
-    [trials_list, trials_ind, trialNum_list, trialNum] = loadData("C:\Users\hakan\Documents\git repos\MousyBox\\7792\\7792_Day09.csv")
-    #print(trials_list)
+    fname = "C:\Users\hakan\Documents\git_repos\MousyBox\\7792\\7792_Day09.csv"
+    [data, trialNum, Trials_list] = loadData(fname)
+    Licks = getLicks(trialNum, Trials_list, th= 50)
+    Licks = findLicks(trialNum, Licks)
 
-    #data = pd.read_csv("C:\Users\hakan\Documents\git repos\MousyBox\\7792\\7792_Day09.csv", delimiter= ",", names= ['Event', 'Value_1', 'Value_2'], skiprows= 2, skip_blank_lines= True, error_bad_lines= False)
-    #print data
+    for lick in Licks[10].index:
+        if Licks[10]['Stamps'].iloc[lick] == 1:
+            print Licks[10]['Stamps'].iloc[lick]
+        elif Licks[10]['Stamps'].iloc[lick] == -1:
+            print Licks[10]['Stamps'].iloc[lick]
+
+    #plotLicks(trialNum, Licks)
+
+    #print Licks[10].iloc[3970:4000]
+    ##print Licks[10]['LickTime'][Licks[10]['Stamps'] == 1]
+    ##print Licks[10]['LickTime'][Licks[10]['Stamps'] == -1]
+    #Licks[int(each)]['Stamps'] = Licks[int(each)]['LickTime'][Licks[int(each)]['LickDigi'] == 1]
+
+    #plt.scatter(Licks[10]['LickTime'][Licks[10]['Stamps'] == 1], Licks[10]['LickTime'][Licks[10]['Stamps'] == -1])
+    #plt.show()
+
+    #a=np.array(Licks[10]['LickDigi'].iloc[0:-2])
+    #b=np.array(Licks[10]['LickDigi'].iloc[1:-1])
+    #print a+b
+
+    #fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 3), facecolor='w', dpi= 150)
+    #ax.plot(Licks[10].LickDigi*400-20)
+    #ax.plot(LickStamps[10])
+    #print LickStamps[10]['Gaussed'].iloc[0]
+    #for row in LickEnd[10].index:
+        #ax.scatter(row, LickStamps[10]['Gaussed'].loc[row])
+    #ax.set_y#lim([-30, 100])
+    #plt.show()
