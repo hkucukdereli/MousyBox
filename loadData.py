@@ -121,6 +121,35 @@ def findLicks(trialNum, Licks):
 
     return Licks
 
+def countLicks(trialNum, Licks, bins):
+    """
+    Parameters
+    ----------
+    trialNum: pandas data frame
+        Data frame that contains the valid trial numbers.
+
+    Licks: pandas data frame
+        lorem ipsum.
+
+    Returns
+    -------
+    Licks: pandas data frame
+        lorem ipsum.
+        Columns: lorem ipsum
+    """
+
+    bins = bins*1000
+    lickCounts = pd.DataFrame()
+    for ind, each in enumerate(trialNum['Value_1']):
+        for bin in bins:
+            licks = Licks[int(each)].iloc[bin:bin+1]
+            tempCount = np.array(licks['LickTime'][lick['Stamps'] == 1])
+            #tempCount = np.array(Licks[int(each)]['LickTime'][Licks[int(each)]['Stamps'] == 1])
+            print len(tempCount)
+            lickCounts[int(each)] = len(tempCount)
+
+    return lickCounts
+
 def getPokes(trialNum, Trials_list):
     """
     Parameters
@@ -167,12 +196,17 @@ if __name__ == "__main__":
     [data, trialNum, Trials_list] = loadData(fname)
     Licks = getLicks(trialNum, Trials_list, th= 50)
     Licks = findLicks(trialNum, Licks)
+    lickCounts = countLicks(trialNum, Licks, [0, 5, 10, 15])
+
+    print lickCounts
 
     for lick in Licks[10].index:
         if Licks[10]['Stamps'].iloc[lick] == 1:
-            print Licks[10]['Stamps'].iloc[lick]
+            pass
+            #print Licks[10]['Stamps'].iloc[lick]
         elif Licks[10]['Stamps'].iloc[lick] == -1:
-            print Licks[10]['Stamps'].iloc[lick]
+            pass
+            #print Licks[10]['Stamps'].iloc[lick]
 
     #plotLicks(trialNum, Licks)
 
