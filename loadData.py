@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,6 +17,10 @@ def chooseFile():
     filenames: tuple
         A tuple that contains the list of files to be loaded.
     """
+
+    ## change the wd to dir containing the script
+    curpath = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(curpath)
 
     root = Tk()
     root.withdraw()
@@ -200,13 +205,21 @@ if __name__ == "__main__":
 
     print lickCounts
 
+    print(Licks[10].head(5))
+
     for lick in Licks[10].index:
         if Licks[10]['Stamps'].iloc[lick] == 1:
+<<<<<<< HEAD
+            print Licks[10]['LickTime'].iloc[lick], Licks[10]['Stamps'].iloc[lick]
+        elif Licks[10]['Stamps'].iloc[lick] == -1:
+            print Licks[10]['LickTime'].iloc[lick], Licks[10]['Stamps'].iloc[lick]
+=======
             pass
             #print Licks[10]['Stamps'].iloc[lick]
         elif Licks[10]['Stamps'].iloc[lick] == -1:
             pass
             #print Licks[10]['Stamps'].iloc[lick]
+>>>>>>> b0506dd5e896c2bde5da753bcbebbf2d771162f4
 
     #plotLicks(trialNum, Licks)
 
